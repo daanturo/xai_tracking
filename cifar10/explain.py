@@ -108,7 +108,7 @@ def main():
             continue
 
         print(CLASS_NAMES[labels[:1].item()], CLASS_NAMES[pred.item()])
-        contributions, preactivations, cosines, dot_products, norms, l, ids = explain(net, inputs[:1], history_file="/raid/cifar10.hdf5")
+        contributions, preactivations, cosines, dot_products, norms, l, ids = explain(net, inputs[:1], history_file="raid/cifar10.hdf5")
         classes, weights = class_statistics(contributions, preactivations, cosines, norms, l)
         slides = ""
         with io.StringIO() as f:

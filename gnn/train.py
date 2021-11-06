@@ -138,7 +138,7 @@ class Model(torch.nn.Module):
 def main():
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(device)
-    dataset = PygGraphPropPredDataset(name="ogbg-ppa", root="/raid/ogbg-ppa") 
+    dataset = PygGraphPropPredDataset(name="ogbg-ppa", root="raid/ogbg-ppa") 
 
     split_idx = dataset.get_idx_split() 
     trainset = dataset[split_idx["train"]]
@@ -168,7 +168,7 @@ def main():
 
     
     # optimizer = torch.optim.Adam(net.parameters(), lr=0.001)
-    optimizer = WrappedOptimizer(torch.optim.SGD, history_file="/raid/gnn.hdf5")(net.parameters(), lr=0.001, momentum=0.9, nesterov=True)
+    optimizer = WrappedOptimizer(torch.optim.SGD, history_file="raid/gnn.hdf5")(net.parameters(), lr=0.001, momentum=0.9, nesterov=True)
     # optimizer = torch.optim.SGD(net.parameters(), lr=0.001, momentum=0.9, nesterov=True)
     # optimizer = torch.optim.SGD(net.parameters(), lr=0.001, momentum=0.9, nesterov=True)
     # optimizer = WrappedOptimizer(torch.optim.SGD)(net.parameters(), lr=0.01)

@@ -34,7 +34,7 @@ PATH = os.path.dirname(__file__)
 def main():
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(device)
-    dataset = PygGraphPropPredDataset(name="ogbg-ppa", root="/raid/ogbg-ppa") 
+    dataset = PygGraphPropPredDataset(name="ogbg-ppa", root="raid/ogbg-ppa") 
 
     split_idx = dataset.get_idx_split() 
     trainset = dataset[split_idx["train"]]
@@ -79,7 +79,7 @@ def main():
             continue
         classes_to_plot = torch.topk(prob, 10)[1].tolist()
         print(CLASS_NAMES[labels[:1].item()], CLASS_NAMES[pred.item()])
-        contributions, preactivations, cosines, dot_products, norms, l, ids = explain(net, (x, edge_index, edge_attr, batch), history_file="/raid/gnn.hdf5")
+        contributions, preactivations, cosines, dot_products, norms, l, ids = explain(net, (x, edge_index, edge_attr, batch), history_file="raid/gnn.hdf5")
         classes, weights = class_statistics(contributions, preactivations, cosines, norms, l)
         slides = ""
         with io.StringIO() as f:
