@@ -80,7 +80,7 @@ def main():
     loss = nn.CrossEntropyLoss(reduction="none")
     # loss = nn.BCEWithLogitsLoss()
 
-    for e in range(35):
+    for e in range(1):
         print("starting epoch: " + str(e))
         correct = 0
         total = 0

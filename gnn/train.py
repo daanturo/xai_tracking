@@ -179,7 +179,7 @@ def main():
 
     normalizer = sum([len(y) for x,y in sampler.classes_.items()]) / len(sampler.classes_)
 
-    for e in range(50):
+    for e in range(2):
         # if e in [10,50,100]:
         #     weight *= 0.1
         print("starting epoch: " + str(e))
