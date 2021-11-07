@@ -20,7 +20,6 @@ from vgg import VGG_net
 from ridgeplot import ridge_plot
 torch.multiprocessing.set_sharing_strategy('file_system')
 import os
-PATH = os.path.dirname(__file__)
 
 class CIFAR10_ind(CIFAR10):
     """
@@ -70,18 +69,18 @@ def main():
     CLASS_NAMES = ('plane', 'car', 'bird', 'cat',
             'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
     net = VGG_net().to_sequential()
-    # net.load_state_dict(torch.load("network10.pt"))
+    # net.load_state_dict(torch.load(os.environ["MODEL_FILE"]))
     net = net.to(device)
 
     
     # optimizer = torch.optim.SGD(net.parameters(), lr=0.00666, weight_decay=0.0340)
-    optimizer = WrappedOptimizer(torch.optim.SGD, history_file="raid/cifar10_tmp.hdf5")(net.parameters(), lr=0.01)
+    optimizer = WrappedOptimizer(torch.optim.SGD, history_file=os.environ["HISTORY_FILE"])(net.parameters(), lr=0.01)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=15, gamma=0.1)
     loss = nn.CrossEntropyLoss(reduction="none")
     # loss = nn.BCEWithLogitsLoss()
 
-    for e in range(1):
-        print("starting epoch: " + str(e))
+    for epoch_num in range(int(os.environ["EPOCHS"])):
+        print("starting epoch: " + str(epoch_num))
         correct = 0
         total = 0
 
@@ -125,7 +124,7 @@ def main():
             optimizer.step()
             optimizer.archive(ids=ind, labels=labels)
 
-        torch.save(net.state_dict(), os.path.join(PATH, "cifar10.pt"))
+        torch.save(net.state_dict(), os.environ["MODEL_FILE"])
         # torch.save(net.state_dict(), "network.pt")
         # torch.save(optimizer, "optimizer.pt")
         print("Training loss is: " + str(l.item()))
@@ -147,7 +146,7 @@ def main():
         print("Test accuracy is: " + str(test_acc))
         scheduler.step()
         net = net.to(device)
-    torch.save(net.state_dict(), os.path.join(PATH, "cifar10.pt"))
+    torch.save(net.state_dict(), os.environ["MODEL_FILE"])
     # torch.save(net.cpu().state_dict(), "cifar_log.pt")  
     print("done with everything")
 

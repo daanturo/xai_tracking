@@ -87,7 +87,7 @@ def main():
     CLASS_NAMES = ('plane', 'car', 'bird', 'cat',
             'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
     net = VGG_net().to_sequential()
-    net.load_state_dict(torch.load(os.path.join(PATH, "cifar10.pt")))
+    net.load_state_dict(torch.load(os.environ["MODEL_FILE"]))
     net = net.to(device)
     net = net.eval()
 
@@ -108,7 +108,7 @@ def main():
             continue
 
         print(CLASS_NAMES[labels[:1].item()], CLASS_NAMES[pred.item()])
-        contributions, preactivations, cosines, dot_products, norms, l, ids = explain(net, inputs[:1], history_file="raid/cifar10.hdf5")
+        contributions, preactivations, cosines, dot_products, norms, l, ids = explain(net, inputs[:1], history_file=os.environ["HISTORY_FILE"])
         classes, weights = class_statistics(contributions, preactivations, cosines, norms, l)
         slides = ""
         with io.StringIO() as f:
@@ -140,7 +140,7 @@ def main():
                 slides += f"<section>{f.getvalue()}</section>"
             slides += "</section>"
 
-        with open(os.path.join(PATH, "plots.html"), "w") as output:
+        with open(os.environ["PLOT_FILE"], "w") as output:
             output.write(open("static/header.html", "r").read().format(slides=slides))
         # print(list([c.shape for c in contributions]))
         print(list([c.shape for c in preactivations]))

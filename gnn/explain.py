@@ -56,7 +56,7 @@ def main():
     print("loaded data...")
     CLASS_NAMES = list([f"c{i+1}" for i in range(dataset.num_classes)])
     net = Model(dataset.num_classes, ghost_samples=ghost_samples).to_sequential()
-    net.load_state_dict(torch.load(os.path.join(PATH, "gnn.pt")))
+    net.load_state_dict(torch.load(os.environ["MODEL_FILE"]))
     net = net.to(device)
     net = net.eval()
 
@@ -79,7 +79,7 @@ def main():
             continue
         classes_to_plot = torch.topk(prob, 10)[1].tolist()
         print(CLASS_NAMES[labels[:1].item()], CLASS_NAMES[pred.item()])
-        contributions, preactivations, cosines, dot_products, norms, l, ids = explain(net, (x, edge_index, edge_attr, batch), history_file="raid/gnn.hdf5")
+        contributions, preactivations, cosines, dot_products, norms, l, ids = explain(net, (x, edge_index, edge_attr, batch), history_file=os.environ["HISTORY_FILE"])
         classes, weights = class_statistics(contributions, preactivations, cosines, norms, l)
         slides = ""
         with io.StringIO() as f:
@@ -109,7 +109,7 @@ def main():
             #     slides += f"<section>{f.getvalue()}</section>"
             slides += "</section>"
 
-        with open(os.path.join(PATH, "plots.html"), "w") as output:
+        with open(os.environ["PLOT_FILE"], "w") as output:
             output.write(open("static/header.html", "r").read().format(slides=slides))
         # print(list([c.shape for c in contributions]))
         print(list([c.shape for c in preactivations]))

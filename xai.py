@@ -1,4 +1,5 @@
 import torch
+import os
 import torch.nn as nn
 import torch.nn.functional as F
 try:
@@ -122,7 +123,7 @@ class WrappedDataset(torch.utils.data.Dataset):
         return (*x, torch.tensor(index))
 
 class WrappedOptimizer(torch.optim.Optimizer):
-    def __init__(self, base_cls, history_file="raid/history.hdf5"):
+    def __init__(self, base_cls, history_file=os.environ["HISTORY_FILE"]):
         self.internal_optimizer_cls = base_cls
         self.history_file = history_file
     def __call__(self, *args, **kwargs):
@@ -175,7 +176,7 @@ class WrappedOptimizer(torch.optim.Optimizer):
 
 
 class History(torch.utils.data.Dataset):
-    def __init__(self, history_file="raid/history.hdf5"):
+    def __init__(self, history_file=os.environ["HISTORY_FILE"]):
         super().__init__()
         self.history_file = history_file
         self.history  = h5py.File(history_file, "r", rdcc_nbytes=1024**3)
@@ -393,7 +394,7 @@ class SequentialWrapper(nn.Module):
         return x, contributions, preactivations
 
 
-def explain(net, example, history_file="raid/history.hdf5", batch_size=3, device="cuda"):
+def explain(net, example, history_file=os.environ["HISTORY_FILE"], batch_size=3, device="cuda"):
     wrapped = SequentialWrapper(net.eval()).eval()
     h = History(history_file=history_file)
     _, init, _ = wrapped(example, {k:torch.tensor(v).to(device).unsqueeze(0) for k,v in h[-1][0].items()}, 1)

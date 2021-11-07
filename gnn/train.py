@@ -163,12 +163,12 @@ def main():
     # CLASS_NAMES = ('plane', 'car', 'bird', 'cat',
     #         'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
     net = Model(dataset.num_classes, ghost_samples=ghost_samples).to_sequential()
-    # net.load_state_dict(torch.load("network10.pt"))
+    # net.load_state_dict(torch.load(os.environ["MODEL_FILE"]))
     net = net.to(device)
 
     
     # optimizer = torch.optim.Adam(net.parameters(), lr=0.001)
-    optimizer = WrappedOptimizer(torch.optim.SGD, history_file="raid/gnn.hdf5")(net.parameters(), lr=0.001, momentum=0.9, nesterov=True)
+    optimizer = WrappedOptimizer(torch.optim.SGD, history_file=os.environ["HISTORY_FILE"])(net.parameters(), lr=0.001, momentum=0.9, nesterov=True)
     # optimizer = torch.optim.SGD(net.parameters(), lr=0.001, momentum=0.9, nesterov=True)
     # optimizer = torch.optim.SGD(net.parameters(), lr=0.001, momentum=0.9, nesterov=True)
     # optimizer = WrappedOptimizer(torch.optim.SGD)(net.parameters(), lr=0.01)
@@ -179,10 +179,10 @@ def main():
 
     normalizer = sum([len(y) for x,y in sampler.classes_.items()]) / len(sampler.classes_)
 
-    for e in range(2):
+    for epoch_num in range(int(os.environ["EPOCHS"])):
         # if e in [10,50,100]:
         #     weight *= 0.1
-        print("starting epoch: " + str(e))
+        print("starting epoch: " + str(epoch_num))
         correct = 0
         total = 0
         running_loss = 0
@@ -224,7 +224,7 @@ def main():
             optimizer.step()
             optimizer.archive(ids=ids, labels=labels)
 
-        torch.save(net.state_dict(), os.path.join(PATH, "gnn.pt"))
+        torch.save(net.state_dict(), os.environ["MODEL_FILE"])
 
     
 
@@ -236,7 +236,7 @@ def main():
         correct = 0
         total = 0
         net.eval()
-        if e % 5 == 4:
+        if epoch_num % 5 == 4:
             with torch.no_grad():
                 for data in testloader:
                     batched_data = data.cuda()
@@ -253,7 +253,7 @@ def main():
         scheduler.step()
         net = net.to(device)
     # torch.save(net.cpu().state_dict(), "cifar_log.pt")   
-    torch.save(net.state_dict(), os.path.join(PATH, "gnn.pt"))
+    torch.save(net.state_dict(), os.environ["MODEL_FILE"])
     print("done with everything")
 
 if __name__ == "__main__":
