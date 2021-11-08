@@ -50,13 +50,12 @@ class WeirdBatchNorm2d(nn.Module):
 
             mean_batch = x[:-self.ghost_samples].mean((0,2,3), keepdim=True)
             mean_ghost = x[-self.ghost_samples:].mean((0,2,3), keepdim=True)#.detach() # experimental detach to disconnect ghost sample from model and remaining batch
-            var_samples = x.var((0,2,3), keepdim=True, unbiased=False)
             var_batch = x[:-self.ghost_samples].var((0,2,3), keepdim=True, unbiased=False)
             var_ghost = x[-self.ghost_samples:].var((0,2,3), keepdim=True, unbiased=False)#.detach() # experimental detach to disconnect ghost sample from model and remaining batch
             # NOTE Why do `mean_ghost` contribute more than `mean_batch`???
             mean = mean_ghost + (mean_ghost - mean_batch)/(1 + self.ghost_samples)
             c = self.ghost_samples /(1 + self.ghost_samples)
-            variance = c * var_ghost + var_samples + c * torch.exp2(mean_ghost - mean_batch)/(1 + self.ghost_samples)
+            variance = c * var_ghost + var_batch + c * torch.exp2(mean_ghost - mean_batch)/(1 + self.ghost_samples)
             normalized_batch = (x - mean) / torch.sqrt(variance + 1e-5)
 
             # print(tmp.shape, self.bn.weight.shape, self.bn.bias.shape)
