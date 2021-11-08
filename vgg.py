@@ -15,6 +15,7 @@ import tqdm
 import pickle
 from typing import Tuple, Any
 VGG_types = {
+    "VGG9": [64, "M", 128, "M", 256, 256, "M", 512, 512, "M", 512],
     "VGG11": [64, "M", 128, "M", 256, 256, "M", 512, 512, "M", 512, 512, "M"],
     "VGG13": [64, 64, "M", 128, 128, "M", 256, 256, "M", 512, 512, "M", 512, 512, "M"],
     "VGG16": [64, 64, "M", 128, 128, "M", 256, 256, 256, "M", 512, 512, 512, "M", 512, 512, 512, "M"],
@@ -66,10 +67,10 @@ class WeirdBatchNorm2d(nn.Module):
             return self.bn(x)
 
 class VGG_net(nn.Module):
-    def __init__(self, in_channels=3, num_classes=10):
+    def __init__(self, in_channels=3, num_classes=10, vgg_type="VGG16"):
         super(VGG_net, self).__init__()
         self.in_channels = in_channels
-        self.conv_layers = self.create_conv_layers(VGG_types["VGG16"])
+        self.conv_layers = self.create_conv_layers(VGG_types[vgg_type])
 
         self.fcs = nn.Sequential(
             nn.Linear(512, 4096, bias=False),

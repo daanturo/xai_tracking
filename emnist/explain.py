@@ -30,8 +30,6 @@ torch.backends.cudnn.deterministic = True
 
 import os
 
-PATH = os.path.dirname(__file__)
-
 
 class ClassSampler(torch.utils.data.BatchSampler):
     def __init__(self, data_source, batch_size, drop_last):
@@ -83,7 +81,7 @@ def main():
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(device)
     transform = transforms.Compose(
-        [transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))]
+        [transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))]
     )
     batch_size = 1
     trainset = WrappedDataset(
@@ -107,9 +105,13 @@ def main():
     testloader = torch.utils.data.DataLoader(
         testset, batch_size=batch_size, shuffle=True, num_workers=8
     )
+    # problem mit shuffle true
+    # brauchen eigenen sampler eventuell?
+    # so? https://discuss.pytorch.org/t/index-concept-in-torch-utils-data-dataloader/72449/6
+    # https://pytorch.org/vision/stable/_modules/torchvision/datasets/cifar.html#CIFAR10.__getitem__
     print("loaded data...")
-    CLASS_NAMES = trainset.ds.classes
-    net = VGG_net(in_channel=1).to_sequential()
+    CLASS_NAMES = ("0", "1", "2", "3", "4", "5", "6", "7", "8", "9")
+    net = VGG_net(in_channels=1, vgg_type="VGG9").to_sequential()
     net.load_state_dict(torch.load(os.environ["MODEL_FILE"]))
     net = net.to(device)
     net = net.eval()
@@ -124,16 +126,15 @@ def main():
         prob = torch.nn.functional.softmax(net(inputs[:1]).view(-1), dim=0)
         pred = prob.argmax()
         print(prob[pred])
-
-        # if CLASS_NAMES[pred.item()] != "frog":
-        # continue
-        # if pred != labels[:1].item():
-        # print("missclassified")
-        # continue
+        if CLASS_NAMES[pred.item()] != "0":
+            continue
+        if pred != labels[:1].item():
+            print("missclassified")
+            continue
 
         print(CLASS_NAMES[labels[:1].item()], CLASS_NAMES[pred.item()])
         contributions, preactivations, cosines, dot_products, norms, l, ids = explain(
-            net, inputs[:1], history_file=os.environ["HISTORY_FILE"]
+            net, inputs[:1], history_file=os.environ["HISTORY_FILE"], device=device
         )
         classes, weights = class_statistics(
             contributions, preactivations, cosines, norms, l
@@ -188,8 +189,10 @@ def main():
                 slides += f"<section>{f.getvalue()}</section>"
             slides += "</section>"
 
-        with open(os.environ["PLOT_FILE"], "w") as output:
-            output.write(open("static/header.html", "r").read().format(slides=slides))
+        with open(os.environ["PLOT_FILE"]) as output:
+            output.write(
+                open("static/header_emnist.html", "r").read().format(slides=slides)
+            )
         # print(list([c.shape for c in contributions]))
         print(list([c.shape for c in preactivations]))
         print(list([c.shape for c in cosines]))

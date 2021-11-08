@@ -26,13 +26,13 @@ def main():
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(device)
     transform = transforms.Compose(
-        [transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))]
+        [transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))]
     )
     batch_size = 128
     ghost_samples = 40
     trainset = WrappedDataset(
         EMNIST(
-            root="emnist/data",
+            root="mnist/data",
             train=True,
             download=True,
             transform=transform,
@@ -46,7 +46,7 @@ def main():
     )
     testset = WrappedDataset(
         EMNIST(
-            root="emnist/data",
+            root="mnist/data",
             train=False,
             download=True,
             transform=transform,
@@ -56,12 +56,13 @@ def main():
     testloader = torch.utils.data.DataLoader(
         testset, batch_size=batch_size, shuffle=False, num_workers=8
     )
-
+    # problem mit shuffle true
+    # brauchen eigenen sampler eventuell?
+    # so? https://discuss.pytorch.org/t/index-concept-in-torch-utils-data-dataloader/72449/6
+    # https://pytorch.org/vision/stable/_modules/torchvision/datasets/cifar.html#CIFAR10.__getitem__
     print("loaded data...")
     CLASS_NAMES = trainset.ds.classes
-    print(CLASS_NAMES)
-
-    net = VGG_net(in_channel=1).to_sequential()
+    net = VGG_net(in_channels=1,vgg_type="VGG9").to_sequential()
     # net.load_state_dict(torch.load(os.environ["MODEL_FILE"]))
     net = net.to(device)
 
@@ -78,10 +79,10 @@ def main():
         correct = 0
         total = 0
 
-        net.train()
-        pbar = tqdm.tqdm(trainloader)
+        net.train()  # train mode
+        pbar = tqdm.tqdm(trainloader)  # show progress bar
         for data in pbar:
-            # get the inputs; data is a list of [inputs, labels, index of batch]
+            # get the inputs; data is a list of [inputs (1 image 4 dimension WxHxCxB), labels (tensor 1 dimension array of length 128, value range 0-9), index of batch (tensor 1 dimension array of length 128?, value large)]
             inputs, labels, ind = data
             inputs, labels = inputs.to(device), labels.to(device)
             if len(labels) < 128:
@@ -117,7 +118,10 @@ def main():
                 f"Loss: {l.item():.4f} Accuracy: {1.0 * correct / total:.4f}"
             )
             l.backward()
+            # perform a single optimization step (parameter update)
             optimizer.step()
+
+            # ind:
             optimizer.archive(ids=ind, labels=labels)
 
         torch.save(net.state_dict(), os.environ["MODEL_FILE"])
@@ -129,7 +133,7 @@ def main():
 
         correct = 0
         total = 0
-        net.eval()
+        net.eval()  # eval mode
         with torch.no_grad():
             for data in testloader:
                 inputs, labels, ind = data
@@ -143,6 +147,7 @@ def main():
         scheduler.step()
         net = net.to(device)
     torch.save(net.state_dict(), os.environ["MODEL_FILE"])
+    # torch.save(net.cpu().state_dict(), "cifar_log.pt")
     print("done with everything")
 
 
